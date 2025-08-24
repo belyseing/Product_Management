@@ -28,7 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="absolute w-20 h-20 bg-gradient-to-bl from-amber-100/50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100"></div>
       <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-indigo-100/50 to-transparent rounded-tr-full opacity-0 group-hover:opacity-100"></div>
 
-     <div className="relative overflow-hidden h-64 w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/70 rounded-2xl shadow-inner">
+     <div className="relative overflow-hidden h-64 w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-200 via-slate-200/50 to-indigo-50/70 rounded-2xl shadow-inner">
 
   
   <div className="absolute top-4 left-6 w-16 h-16 bg-gradient-to-br from-red-200/40 to-rose-200/40 rounded-full blur-3xl opacity-50 animate-blob"></div>
