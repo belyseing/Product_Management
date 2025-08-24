@@ -6,7 +6,8 @@ import Hero from "./components/pages/Hero";
 import Categories from "./components/pages/Categories";
 import ProductList from "./product/ProductList";
 import ProductView from "./components/pages/ProductView";
-import ProductEdit from "./components/pages/ProductEdit"; // Add this import
+import ProductEdit from "./components/pages/ProductEdit"; 
+import CartPage from "./components/pages/CartPage";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         {/* Product View page */}
         <Route path="/edit-product/:id" element={<ProductEdit />} />
         <Route path="/product/:id" element={<ProductView />} />
+       <Route path="/cart" element={<CartPage />} />
       </Routes>
     </Router>
   );

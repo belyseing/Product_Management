@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
-import { getProductById } from '../../api/productApi';
+import { getProductById } from '../../api/productAPI';
 import type { Product } from '../../types/product';
 import { ProductContext } from '../../context/ProductContext';
+import Input from '../ui/Input';
+import TextArea from '../ui/TextArea';
 
 function ProductEdit() {
   const { id } = useParams();
@@ -14,19 +16,16 @@ function ProductEdit() {
   const [product, setProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>({});
   const [error, setError] = useState('');
-  
 
   const fetchRequested = useRef(false);
   const submitRequested = useRef(false);
 
   useEffect(() => {
-    
     if (fetchRequested.current) return;
     fetchRequested.current = true;
 
     const fetchProduct = async () => {
       if (!id) return;
-      
       try {
         setLoading(true);
         const productData = await getProductById(parseInt(id));
@@ -41,7 +40,6 @@ function ProductEdit() {
     };
 
     fetchProduct();
-
 
     return () => {
       fetchRequested.current = false;
@@ -58,19 +56,12 @@ function ProductEdit() {
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
     if (value === '') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: undefined
-      }));
+      setFormData(prev => ({ ...prev, [name]: undefined }));
     } else {
       const numValue = Number(value);
       if (!isNaN(numValue)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: numValue
-        }));
+        setFormData(prev => ({ ...prev, [name]: numValue }));
       }
     }
   };
@@ -85,30 +76,24 @@ function ProductEdit() {
     try {
       setSaving(true);
       setError('');
-      
 
       const updatedData: Record<string, any> = {};
-      
+
       Object.keys(formData).forEach(key => {
         const formValue = formData[key as keyof Product];
         const originalValue = product[key as keyof Product];
-        
-        
+
         if (key === 'discountPercentage') {
           const numFormValue = typeof formValue === 'string' ? parseFloat(formValue) : formValue;
           const numOriginalValue = typeof originalValue === 'string' ? parseFloat(originalValue) : originalValue;
-          
+
           if (numFormValue !== numOriginalValue && numFormValue !== undefined) {
             updatedData[key] = numFormValue;
           }
-        } 
-      
-        else if (formValue !== originalValue && formValue !== undefined) {
+        } else if (formValue !== originalValue && formValue !== undefined) {
           updatedData[key] = formValue;
         }
       });
-
-      console.log('Updated data:', updatedData);
 
       if (Object.keys(updatedData).length === 0) {
         setError('No changes detected');
@@ -116,15 +101,11 @@ function ProductEdit() {
         return;
       }
 
-  
       await productContext.updateExistingProduct(parseInt(id), updatedData);
-      
-  
+
       alert('Product updated successfully!');
       navigate(-1);
-      
     } catch (err: any) {
-
       if (err.response?.data?.message) {
         setError(`Failed to update product: ${err.response.data.message}`);
       } else {
@@ -177,7 +158,7 @@ function ProductEdit() {
             <FaArrowLeft className="group-hover:-translate-x-1 transition-transform duration-300" />
             <span>Back to Product</span>
           </button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900">Edit Product</h1>
         </div>
 
@@ -191,117 +172,88 @@ function ProductEdit() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Information */}
               <div className="md:col-span-2">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Product Information</h2>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                  required
-                />
-              </div>
+              <Input
+                label="Title"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleInputChange}
+                required
+              />
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description || ''}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                  required
-                />
-              </div>
+              <TextArea
+                label="Description"
+                name="description"
+                value={formData.description || ''}
+                onChange={handleInputChange}
+                rows={4}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                  required
-                />
-              </div>
+              <Input
+                label="Category"
+                name="category"
+                value={formData.category || ''}
+                onChange={handleInputChange}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                <input
-                  type="text"
-                  name="brand"
-                  value={formData.brand || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                />
-              </div>
+              <Input
+                label="Brand"
+                name="brand"
+                value={formData.brand || ''}
+                onChange={handleInputChange}
+              />
 
-              {/* Pricing */}
               <div className="md:col-span-2">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Pricing & Inventory</h2>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price ?? ''}
-                  onChange={handleNumberInputChange}
-                  step="0.01"
-                  min="0"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                  required
-                />
-              </div>
+              <Input
+                label="Price ($)"
+                type="number"
+                name="price"
+                value={formData.price ?? ''}
+                onChange={handleNumberInputChange}
+                step={0.01}
+                min={0}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Discount Percentage (%)</label>
-                <input
-                  type="number"
-                  name="discountPercentage"
-                  value={formData.discountPercentage ?? ''}
-                  onChange={handleNumberInputChange}
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                />
-              </div>
+              <Input
+                label="Discount Percentage (%)"
+                type="number"
+                name="discountPercentage"
+                value={formData.discountPercentage ?? ''}
+                onChange={handleNumberInputChange}
+                step={0.1}
+                min={0}
+                max={100}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock ?? ''}
-                  onChange={handleNumberInputChange}
-                  min="0"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                  required
-                />
-              </div>
+              <Input
+                label="Stock Quantity"
+                type="number"
+                name="stock"
+                value={formData.stock ?? ''}
+                onChange={handleNumberInputChange}
+                min={0}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                <input
-                  type="number"
-                  name="rating"
-                  value={formData.rating ?? ''}
-                  onChange={handleNumberInputChange}
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-                />
-              </div>
+              <Input
+                label="Rating"
+                type="number"
+                name="rating"
+                value={formData.rating ?? ''}
+                onChange={handleNumberInputChange}
+                step={0.1}
+                min={0}
+                max={5}
+              />
             </div>
 
             {/* Action Buttons */}
@@ -314,7 +266,7 @@ function ProductEdit() {
                 <FaSave />
                 <span>{saving ? 'Saving...' : 'Save Changes'}</span>
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => navigate(-1)}
