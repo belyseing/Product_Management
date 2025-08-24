@@ -1,8 +1,9 @@
-import  { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProducts } from "../../hooks/useProducts";
 import { FaArrowLeft, FaEdit, FaTrash, FaStar, FaShoppingCart, FaTag, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ProductContext } from "../../context/ProductContext"; 
+import { getProductById } from "../../api/productAPI"; // Import your API function
 
 function ProductView() {
   const { id } = useParams(); 
@@ -12,10 +13,63 @@ function ProductView() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const product = products.find((p) => p.id.toString() === id);
+  // First try to find product in local state, then fetch from API if not found
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
 
-  if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
+      // First check if product exists in local state
+      const localProduct = products.find((p) => p.id.toString() === id);
+      if (localProduct) {
+        setProduct(localProduct);
+        setLoading(false);
+        return;
+      }
+
+      // If not found locally, fetch from API
+      try {
+        setLoading(true);
+        const productData = await getProductById(Number(id));
+        setProduct(productData);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setDeleteError("Product not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, products]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700">Loading product...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700">Product not found</h2>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
@@ -28,11 +82,7 @@ function ProductView() {
     try {
       if (productContext) {
         await productContext.deleteExistingProduct(product.id);
-        
-       
         alert("Product deleted successfully!");
-        
-       
         navigate("/");
       } else {
         setDeleteError("Product context not available");
@@ -67,12 +117,10 @@ function ProductView() {
     "tags", "description", "title", "category", "rating", "stock", "price", "discountPercentage", "promotion"
   ];
 
-
   const formatKeyName = (key: string) => {
     return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
- 
   const allImages = product.images && product.images.length > 0 
     ? [product.thumbnail, ...product.images] 
     : [product.thumbnail];
