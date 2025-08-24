@@ -83,7 +83,7 @@ function ProductView() {
       if (productContext) {
         await productContext.deleteExistingProduct(product.id);
         alert("Product deleted successfully!");
-        navigate("/");
+        navigate("/ProductList");
       } else {
         setDeleteError("Product context not available");
       }

@@ -147,7 +147,6 @@ function Header() {
 
   return (
     <div className="flex justify-between items-center bg-slate-700 text-white px-6 py-4">
-      
       <div className="flex items-center gap-2">
         <SiCoinmarketcap className="text-3xl text-slate-300" />
         <h1 className="text-2xl font-bold">Shop<span className="text-amber-500">cart</span></h1>
