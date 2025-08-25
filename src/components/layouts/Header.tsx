@@ -1,10 +1,10 @@
 import { SiCoinmarketcap } from "react-icons/si";
-import { FaAngleDown, FaUserAlt } from "react-icons/fa";
+import { FaUserAlt } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
 import { useCart } from "../../context/CartContext";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate, useLocation } from "react-router-dom"; 
 import { useState, useEffect, useRef } from "react";
-import { searchProducts, getCategories } from "../../api/productAPI";
+import { searchProducts, getCategories} from "../../api/productAPI";
 import { Product } from "../../types/product";
 
 interface Category {
@@ -16,14 +16,23 @@ interface Category {
 function Header() {
   const { cart } = useCart(); 
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Extract category from URL on component mount and URL changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const category = searchParams.get('category');
+    if (category) {
+      setSelectedCategory(category);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -33,23 +42,22 @@ function Header() {
         if (cats.length > 0 && typeof cats[0] === 'object') {
           setCategories(cats as Category[]);
         } else {
-       
+          
           setCategories((cats as string[]).map((cat, index) => ({
             id: index,
-            name: cat,
-            slug: cat.toLowerCase().replace(/\s+/g, '-')
+            name: cat.charAt(0).toUpperCase() + cat.slice(1), 
+            slug: cat.toLowerCase()
           })));
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        
         setCategories([
           { id: 1, name: "Smartphones", slug: "smartphones" },
           { id: 2, name: "Laptops", slug: "laptops" },
           { id: 3, name: "Fragrances", slug: "fragrances" },
           { id: 4, name: "Skincare", slug: "skincare" },
           { id: 5, name: "Groceries", slug: "groceries" },
-          { id: 6, name: "Home Decoration", slug: "home-decoration" }
+          { id: 6, name: "Home decoration", slug: "home-decoration" }
         ]);
       }
     };
@@ -57,19 +65,16 @@ function Header() {
     fetchCategories();
   }, []);
 
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
-        setShowCategoryDropdown(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -79,7 +84,7 @@ function Header() {
         setSearchResults([]);
         setShowSuggestions(false);
       }
-    }, 300); 
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
@@ -99,26 +104,32 @@ function Header() {
   };
 
   const handleSearchSubmit = () => {
+    const searchParams = new URLSearchParams();
+    
     if (searchTerm.trim()) {
-      navigate(`/?search=${encodeURIComponent(searchTerm)}`);
-    } else if (selectedCategory !== "all") {
-      navigate(`/?category=${encodeURIComponent(selectedCategory)}`);
-    } else {
-      navigate('/'); 
+      searchParams.set('search', searchTerm);
     }
+    
+    if (selectedCategory !== "all") {
+      searchParams.set('category', selectedCategory);
+    }
+    
+    const queryString = searchParams.toString();
+    navigate(queryString ? `/?${queryString}` : '/');
     setShowSuggestions(false);
-    setShowCategoryDropdown(false);
   };
 
-  const handleCategorySelect = (categorySlug: string) => {
+  const handleCategoryChange = (categorySlug: string) => {
     setSelectedCategory(categorySlug);
-    setShowCategoryDropdown(false);
+    setSearchTerm(""); 
     
-    if (categorySlug === "all") {
-      navigate('/'); 
-    } else {
-      navigate(`/?category=${encodeURIComponent(categorySlug)}`);
+    const searchParams = new URLSearchParams();
+    if (categorySlug !== "all") {
+      searchParams.set('category', categorySlug);
     }
+    
+    const queryString = searchParams.toString();
+    navigate(queryString ? `/?${queryString}` : '/');
   };
 
   const handleSuggestionClick = (product: Product) => {
@@ -131,18 +142,6 @@ function Header() {
     if (e.key === 'Enter') {
       handleSearchSubmit();
     }
-  };
-
-  const toggleCategoryDropdown = () => {
-    setShowCategoryDropdown(!showCategoryDropdown);
-    setShowSuggestions(false);
-  };
-
-
-  const getCategoryDisplayName = () => {
-    if (selectedCategory === "all") return "Categories";
-    const category = categories.find(cat => cat.slug === selectedCategory);
-    return category ? category.name : selectedCategory;
   };
 
   return (
@@ -158,44 +157,20 @@ function Header() {
         <div className="relative w-full max-w-2xl" ref={searchRef}>
           <div className="flex items-center bg-white rounded-md overflow-hidden">
            
-            <div className="relative">
-              <div 
-                className="flex items-center gap-1 bg-gray-100 px-4 py-3 cursor-pointer border-r"
-                onClick={toggleCategoryDropdown}
-              >
-                <p className="text-black">
-                  {getCategoryDisplayName()}
-                </p>
-                <FaAngleDown className="text-black" />
-              </div>
-              
+            <select
+              className="bg-gray-100 px-4 py-3 cursor-pointer border-r border-gray-300 text-black"
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+            >
+              <option value="all">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
             
-              {showCategoryDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto w-48">
-                  <div
-                    className={`p-3 hover:bg-gray-100 cursor-pointer border-b ${
-                      selectedCategory === "all" ? "bg-amber-100 font-semibold" : ""
-                    }`}
-                    onClick={() => handleCategorySelect("all")}
-                  >
-                    All Categories
-                  </div>
-                  {categories.map((category) => (
-                    <div
-                      key={category.id}
-                      className={`p-3 hover:bg-gray-100 cursor-pointer border-b ${
-                        selectedCategory === category.slug ? "bg-amber-100 font-semibold" : ""
-                      }`}
-                      onClick={() => handleCategorySelect(category.slug)}
-                    >
-                      {category.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-           
+          
             <input
               type="text"
               placeholder="Search for Product..."
@@ -215,6 +190,7 @@ function Header() {
             </button>
           </div>
 
+         
           {showSuggestions && (
             <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
               {isSearching ? (
@@ -241,7 +217,6 @@ function Header() {
                       </div>
                     </div>
                   ))}
-              
                   <div
                     className="p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer text-center font-semibold text-blue-600"
                     onClick={handleSearchSubmit}
@@ -257,8 +232,8 @@ function Header() {
         </div>
       </div>
 
+     
       <div className="flex items-center gap-6 mr-4">
-    
         <div className="flex items-center gap-2">
           <FaUserAlt
             className="bg-amber-400 rounded-full p-2"
@@ -267,7 +242,6 @@ function Header() {
           <p className="text-lg font-medium">Emily</p>
         </div>
 
-    
         <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
           <FaCartShopping className="text-3xl" />
           {cart.totalItems > 0 && (

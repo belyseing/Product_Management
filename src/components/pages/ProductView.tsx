@@ -16,12 +16,12 @@ function ProductView() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // First try to find product in local state, then fetch from API if not found
+ 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
 
-      // First check if product exists in local state
+      
       const localProduct = products.find((p) => p.id.toString() === id);
       if (localProduct) {
         setProduct(localProduct);
@@ -29,7 +29,7 @@ function ProductView() {
         return;
       }
 
-      // If not found locally, fetch from API
+ 
       try {
         setLoading(true);
         const productData = await getProductById(Number(id));

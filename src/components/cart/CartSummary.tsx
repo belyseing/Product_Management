@@ -15,48 +15,47 @@ const CartSummary: React.FC<CartSummaryProps> = ({
   isLoading = false
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <FaShoppingCart className="mr-2 text-amber-600" />
+    <div className="bg-slate-50 rounded-3xl shadow-xl p-6 border border-slate-200">
+      
+   
+      <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center">
+        <FaShoppingCart className="mr-2 text-amber-500" />
         Order Summary
       </h2>
 
-      <div className="space-y-3 mb-6">
+     
+      <div className="space-y-4 mb-6">
         <div className="flex justify-between">
-          <span className="text-gray-600">Items ({totalItems})</span>
-          <span className="font-semibold">${totalPrice.toFixed(2)}</span>
+          <span className="text-slate-600 font-medium">Items ({totalItems})</span>
+          <span className="text-slate-900 font-semibold">${totalPrice.toFixed(2)}</span>
         </div>
-        
         <div className="flex justify-between">
-          <span className="text-gray-600">Shipping</span>
-          <span className="font-semibold">$0.00</span>
+          <span className="text-slate-600 font-medium">Shipping</span>
+          <span className="text-slate-900 font-semibold">$0.00</span>
         </div>
-        
         <div className="flex justify-between">
-          <span className="text-gray-600">Tax</span>
-          <span className="font-semibold">${(totalPrice * 0.1).toFixed(2)}</span>
+          <span className="text-slate-600 font-medium">Tax</span>
+          <span className="text-slate-900 font-semibold">${(totalPrice * 0.1).toFixed(2)}</span>
         </div>
-        
-        <div className="border-t pt-3">
-          <div className="flex justify-between text-lg font-bold">
+        <div className="border-t border-slate-200 pt-4">
+          <div className="flex justify-between text-lg font-bold text-slate-900">
             <span>Total</span>
-            <span className="text-amber-600">
-              ${(totalPrice * 1.1).toFixed(2)}
-            </span>
+            <span className="text-amber-600">${(totalPrice * 1.1).toFixed(2)}</span>
           </div>
         </div>
       </div>
 
+    
       <button
         onClick={onCheckout}
         disabled={totalItems === 0 || isLoading}
-        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 px-6 rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        className="w-full bg-amber-500 text-white py-3 rounded-xl font-semibold hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isLoading ? 'Processing...' : 'Proceed to Checkout'}
+        {isLoading ? 'Processing...' : 'Order Now'}
       </button>
 
       {totalItems === 0 && (
-        <p className="text-center text-gray-500 mt-4 text-sm">
+        <p className="text-center text-slate-500 mt-4 text-sm">
           Your cart is empty
         </p>
       )}

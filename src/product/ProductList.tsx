@@ -3,15 +3,23 @@ import { useProducts } from "../hooks/useProducts";
 import ProductCard from "./ProductCard";
 import type { Product } from "../types/product";
 import { useLocation } from "react-router-dom";
-import { searchProducts } from "../api/productAPI";
+import { searchProducts, getCategories, getProductsByCategory } from "../api/productAPI";
 
 const PRODUCT_UPDATED_EVENT = 'productUpdated';
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 const ProductList: React.FC = () => {
   const { products, refreshProducts } = useProducts();
   const [currentProducts, setCurrentProducts] = useState<Product[]>(products);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   
   const location = useLocation();
@@ -20,8 +28,73 @@ const ProductList: React.FC = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const query = searchParams.get('search');
+    const category = searchParams.get('category');
+    
     setSearchQuery(query || "");
+    setSelectedCategory(category || "all");
   }, [location.search]);
+
+
+
+useEffect(() => {
+  const filterProducts = async () => {
+    if (selectedCategory !== "all") {
+      setIsSearching(true);
+      try {
+       
+        const categoryProducts = await getProductsByCategory(selectedCategory);
+        setFilteredProducts(categoryProducts);
+      } catch (error) {
+        console.error('Error fetching category products:', error);
+        setFilteredProducts([]);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      
+      setFilteredProducts(currentProducts);
+    }
+  };
+
+  if (selectedCategory !== "all") {
+    filterProducts();
+  } else {
+    setFilteredProducts(currentProducts);
+  }
+}, [selectedCategory, currentProducts]);
+
+
+
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const cats = await getCategories();
+       
+        if (cats.length > 0 && typeof cats[0] === 'object') {
+          setCategories(cats as Category[]);
+        } else {
+          setCategories((cats as string[]).map((cat, index) => ({
+            id: index,
+            name: cat,
+            slug: cat.toLowerCase().replace(/\s+/g, '-')
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([
+          { id: 1, name: "Smartphones", slug: "smartphones" },
+          { id: 2, name: "Laptops", slug: "laptops" },
+          { id: 3, name: "Fragrances", slug: "fragrances" },
+          { id: 4, name: "Skincare", slug: "skincare" },
+          { id: 5, name: "Groceries", slug: "groceries" },
+          { id: 6, name: "Home Decoration", slug: "home-decoration" }
+        ]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
 
   useEffect(() => {
@@ -30,12 +103,46 @@ const ProductList: React.FC = () => {
 
 
   useEffect(() => {
+    const filterProducts = () => {
+      let result = [...currentProducts];
+      
+     
+      if (selectedCategory !== "all") {
+        result = result.filter(product => {
+          const productCategorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
+          return productCategorySlug === selectedCategory;
+        });
+      }
+      
+    
+      if (searchQuery.trim()) {
+        result = result.filter(product => 
+          product.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      
+      setFilteredProducts(result);
+    };
+
+    filterProducts();
+  }, [searchQuery, selectedCategory, currentProducts]);
+
+  useEffect(() => {
     const performSearch = async () => {
       if (searchQuery.trim()) {
         setIsSearching(true);
         try {
           const results = await searchProducts(searchQuery);
-          setFilteredProducts(results);
+          
+          let filteredResults = results;
+          if (selectedCategory !== "all") {
+            filteredResults = results.filter(product => {
+              const productCategorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
+              return productCategorySlug === selectedCategory;
+            });
+          }
+          
+          setFilteredProducts(filteredResults);
         } catch (error) {
           console.error('Search error:', error);
           setFilteredProducts([]);
@@ -43,12 +150,20 @@ const ProductList: React.FC = () => {
           setIsSearching(false);
         }
       } else {
-        setFilteredProducts(currentProducts);
+       
+        let result = [...currentProducts];
+        if (selectedCategory !== "all") {
+          result = result.filter(product => {
+            const productCategorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
+            return productCategorySlug === selectedCategory;
+          });
+        }
+        setFilteredProducts(result);
       }
     };
 
     performSearch();
-  }, [searchQuery, currentProducts]);
+  }, [searchQuery, selectedCategory, currentProducts]);
 
   useEffect(() => {
     const handleProductUpdated = (event: CustomEvent) => {
@@ -79,7 +194,11 @@ const ProductList: React.FC = () => {
   };
 
 
-  const displayProducts = searchQuery ? filteredProducts : currentProducts;
+  const getCategoryDisplayName = () => {
+    if (selectedCategory === "all") return "All Products";
+    const category = categories.find(cat => cat.slug === selectedCategory);
+    return category ? category.name : selectedCategory;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-50/70 p-6 md:p-8">
@@ -87,10 +206,17 @@ const ProductList: React.FC = () => {
         <div className="text-center mb-12 mt-12 relative">
           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-80"></div>
           
-         
+        
           {searchQuery ? (
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
               Search Results for <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">"{searchQuery}"</span>
+              {selectedCategory !== "all" && (
+                <span className="block text-xl mt-2 text-gray-600">in {getCategoryDisplayName()}</span>
+              )}
+            </h2>
+          ) : selectedCategory !== "all" ? (
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+              {getCategoryDisplayName()}
             </h2>
           ) : (
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
@@ -101,7 +227,9 @@ const ProductList: React.FC = () => {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
             {searchQuery 
               ? `Found ${filteredProducts.length} product${filteredProducts.length !== 1 ? 's' : ''} matching your search`
-              : "Discover our amazing collection of products with great discounts and fast shipping."
+              : selectedCategory !== "all"
+                ? `Browse our ${filteredProducts.length} ${getCategoryDisplayName().toLowerCase()}`
+                : "Discover our amazing collection of products with great discounts and fast shipping."
             }
           </p>
           
@@ -119,11 +247,16 @@ const ProductList: React.FC = () => {
         )}
 
      
-        {!isSearching && searchQuery && filteredProducts.length === 0 && (
+        {!isSearching && filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-4">We couldn't find any products matching "{searchQuery}"</p>
+            <p className="text-gray-600 mb-4">
+              {searchQuery 
+                ? `We couldn't find any products matching "${searchQuery}"`
+                : `We couldn't find any products in the ${getCategoryDisplayName()} category`
+              }
+            </p>
             <button
               onClick={() => window.location.href = '/'}
               className="bg-amber-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-amber-600 transition"
@@ -132,12 +265,12 @@ const ProductList: React.FC = () => {
             </button>
           </div>
         )}
-     
-      
-        {!isSearching && displayProducts.length > 0 && (
+        
+   
+        {!isSearching && filteredProducts.length > 0 && (
           <div className="flex justify-center">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 md:gap-10">
-              {displayProducts.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
