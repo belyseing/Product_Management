@@ -3,20 +3,39 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useProducts } from "../../hooks/useProducts";
 import { FaArrowLeft, FaEdit, FaTrash, FaStar, FaShoppingCart, FaTag, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ProductContext } from "../../context/ProductContext"; 
-import { getProductById } from "../../api/productAPI"; // Import your API function
+import { getProductById } from "../../api/productAPI";
+import { useCart } from "../../context/CartContext"; 
 
 function ProductView() {
-  const { id } = useParams(); 
-  const navigate = useNavigate();
-  const { products } = useProducts();
-  const productContext = useContext(ProductContext); 
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+const { id } = useParams();
+const navigate = useNavigate();
+const { products } = useProducts();
+const productContext = useContext(ProductContext);
+const { addToCart, isInCart } = useCart();
+
+const [isAddingToCart, setIsAddingToCart] = useState(false);
+const [activeImageIndex, setActiveImageIndex] = useState(0);
+const [isDeleting, setIsDeleting] = useState(false);
+const [deleteError, setDeleteError] = useState("");
+const [product, setProduct] = useState<any>(null);
+const [loading, setLoading] = useState(true);
+
+const productInCart = product ? isInCart(product.id) : false;
+
 
  
+
+
+const handleAddToCart = () => {
+  if (!product) return;
+  setIsAddingToCart(true);
+  addToCart(product);
+  console.log("Add to cart:", product);
+  setIsAddingToCart(false);
+};
+
+
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
@@ -95,9 +114,7 @@ function ProductView() {
     }
   };
 
-  const handleAddToCart = () => {
-    console.log("Add to cart:", product);
-  };
+
 
   const handleNextImage = () => {
     if (product.images && product.images.length > 0) {
@@ -217,13 +234,19 @@ function ProductView() {
 
                
                 <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleAddToCart}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all shadow-md hover:shadow-lg"
-                  >
-                    <FaShoppingCart />
-                    <span>Add to Cart</span>
-                  </button>
+               <button
+  onClick={handleAddToCart}
+  disabled={productInCart || isAddingToCart}
+  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300 ${
+    productInCart || isAddingToCart
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-amber-500 text-white hover:bg-amber-600 hover:shadow-lg active:scale-95"
+  }`}
+>
+  <FaShoppingCart className="text-xl" />
+  {productInCart ? "Added" : isAddingToCart ? "Adding..." : "Add to Cart"}
+</button>
+
                   <div className="flex gap-3">
                     <button
                       onClick={() => navigate(`/edit-product/${product.id}`)}
