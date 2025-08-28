@@ -80,12 +80,12 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       onCategoryChange(categorySlug);
     }
 
-if (categorySlug === "all") {
-  navigate('/product/:id');
-} else {
-  navigate(`/product/:id?category=${encodeURIComponent(categorySlug)}`);
-}
 
+    if (categorySlug === "all") {
+      navigate('/');
+    } else {
+      navigate(`/?category=${encodeURIComponent(categorySlug)}`);
+    }
   };
 
  
