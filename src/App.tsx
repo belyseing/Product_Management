@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/pages/Login";
 import SubHeader from "./components/layouts/SubHeader";
 import Header from "./components/layouts/Header";
@@ -16,54 +15,28 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-
           {/* Public Routes */}
           <Route path="/" element={<Login />} />
 
-          {/* Protected Routes */}
           <Route
             path="/ProductList"
             element={
-              <ProtectedRoute>
+              <>
                 <SubHeader />
                 <Header />
                 <Hero />
                 <Categories />
                 <ProductList />
-              </ProtectedRoute>
+              </>
             }
           />
 
-          <Route
-            path="/product/:id"
-            element={
-              <ProtectedRoute>
-                <ProductView />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/edit-product/:id"
-            element={
-              <ProtectedRoute>
-                <ProductEdit />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <CartPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/edit-product/:id" element={<ProductEdit />} />
+          <Route path="/cart" element={<CartPage />} />
 
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
-
         </Routes>
       </Router>
     </AuthProvider>

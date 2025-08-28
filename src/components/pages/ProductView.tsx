@@ -34,7 +34,6 @@ function ProductView() {
     const fetchProduct = async () => {
       if (!id) return;
 
-      // First check if product exists in local state
       const localProduct = products.find((p) => p.id.toString() === id);
       if (localProduct) {
         setProduct(localProduct);
