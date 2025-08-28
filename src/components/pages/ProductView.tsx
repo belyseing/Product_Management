@@ -1,21 +1,94 @@
-import  { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProducts } from "../../hooks/useProducts";
 import { FaArrowLeft, FaEdit, FaTrash, FaStar, FaShoppingCart, FaTag, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { ProductContext } from "../../context/ProductContext"; 
+import { getProductById } from "../../api/productAPI";
+import { useCart } from "../../context/CartContext"; 
 
 function ProductView() {
-  const { id } = useParams(); 
-  const navigate = useNavigate();
-  const { products } = useProducts();
-  const productContext = useContext(ProductContext); 
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
+const { id } = useParams();
+const navigate = useNavigate();
+const { products } = useProducts();
+const productContext = useContext(ProductContext);
+const { addToCart, isInCart } = useCart();
 
-  const product = products.find((p) => p.id.toString() === id);
+const [isAddingToCart, setIsAddingToCart] = useState(false);
+const [activeImageIndex, setActiveImageIndex] = useState(0);
+const [isDeleting, setIsDeleting] = useState(false);
+const [deleteError, setDeleteError] = useState("");
+const [product, setProduct] = useState<any>(null);
+const [loading, setLoading] = useState(true);
 
-  if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
+const productInCart = product ? isInCart(product.id) : false;
+
+
+ 
+
+
+const handleAddToCart = () => {
+  if (!product) return;
+  setIsAddingToCart(true);
+  addToCart(product);
+  console.log("Add to cart:", product);
+  setIsAddingToCart(false);
+};
+
+
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+
+      
+      const localProduct = products.find((p) => p.id.toString() === id);
+      if (localProduct) {
+        setProduct(localProduct);
+        setLoading(false);
+        return;
+      }
+
+ 
+      try {
+        setLoading(true);
+        const productData = await getProductById(Number(id));
+        setProduct(productData);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setDeleteError("Product not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, products]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700">Loading product...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-700">Product not found</h2>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
@@ -28,11 +101,7 @@ function ProductView() {
     try {
       if (productContext) {
         await productContext.deleteExistingProduct(product.id);
-        
-       
         alert("Product deleted successfully!");
-        
-       
         navigate("/");
       } else {
         setDeleteError("Product context not available");
@@ -45,9 +114,7 @@ function ProductView() {
     }
   };
 
-  const handleAddToCart = () => {
-    console.log("Add to cart:", product);
-  };
+
 
   const handleNextImage = () => {
     if (product.images && product.images.length > 0) {
@@ -67,12 +134,10 @@ function ProductView() {
     "tags", "description", "title", "category", "rating", "stock", "price", "discountPercentage", "promotion"
   ];
 
-
   const formatKeyName = (key: string) => {
     return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
- 
   const allImages = product.images && product.images.length > 0 
     ? [product.thumbnail, ...product.images] 
     : [product.thumbnail];
@@ -169,13 +234,19 @@ function ProductView() {
 
                
                 <div className="flex flex-col gap-3">
-                  <button
-                    onClick={handleAddToCart}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all shadow-md hover:shadow-lg"
-                  >
-                    <FaShoppingCart />
-                    <span>Add to Cart</span>
-                  </button>
+               <button
+  onClick={handleAddToCart}
+  disabled={productInCart || isAddingToCart}
+  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300 ${
+    productInCart || isAddingToCart
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-amber-500 text-white hover:bg-amber-600 hover:shadow-lg active:scale-95"
+  }`}
+>
+  <FaShoppingCart className="text-xl" />
+  {productInCart ? "Added" : isAddingToCart ? "Adding..." : "Add to Cart"}
+</button>
+
                   <div className="flex gap-3">
                     <button
                       onClick={() => navigate(`/edit-product/${product.id}`)}

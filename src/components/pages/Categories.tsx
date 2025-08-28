@@ -33,21 +33,21 @@ function Categories() {
         
         <div className="mb-10">
           <h2 className="text-4xl font-extrabold text-gray-800">
-            Shop by <span className="text-amber-600">Categories</span>
+            Shop by <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Categories</span>
           </h2>
           <p className="text-gray-600 mt-2 text-lg">
-            Discover products across our most popular categories
+            over products across our most popular categories
           </p>
         </div>
 
-        {/* Categories cards*/}
+       
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {categories.map((category, index) => (
             <div 
               key={index} 
               className="group relative overflow-hidden rounded-2xl shadow-lg bg-white transition transform hover:-translate-y-2 hover:shadow-2xl cursor-pointer"
             >
-              {/*  category Image */}
+             
               <img 
                 src={category.image} 
                 alt={category.name}  
@@ -57,7 +57,7 @@ function Categories() {
              
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-90"></div>
 
-              {/* Category Name */}
+            
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center">
                 <h3 className="text-white font-bold text-lg tracking-wide group-hover:scale-105 transition-transform">
                   {category.name}

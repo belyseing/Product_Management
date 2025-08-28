@@ -24,7 +24,7 @@ function Hero() {
             Shopping is a bit of a relaxing hobby for me, which is sometimes troubling for the bank balance.
           </p>
           <button className="bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-md">
-            Shop Now
+            Add Product
           </button>
         </div>
 
