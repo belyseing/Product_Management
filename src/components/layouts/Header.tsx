@@ -4,8 +4,8 @@ import { FaCartShopping } from "react-icons/fa6";
 import { useCart } from "../../context/CartContext";
 import { useNavigate, useLocation } from "react-router-dom"; 
 import { useState, useEffect, useRef } from "react";
-import { searchProducts, getCategories} from "../../api/productAPI";
-import { Product } from "../../types/product";
+import { searchProducts, getCategories } from "../../api/productAPI";
+import type { Product } from "../../types/product";
 
 interface Category {
   id: number;

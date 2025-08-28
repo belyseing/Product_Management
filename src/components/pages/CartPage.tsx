@@ -15,7 +15,7 @@ const CartPage: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    navigate('/ProductList');
+    navigate('/');
   };
 
   if (cart.items.length === 0) {
