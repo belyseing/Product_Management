@@ -1,6 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import Login from "./components/pages/Login";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import SubHeader from "./components/layouts/SubHeader";
 import Header from "./components/layouts/Header";
 import Hero from "./components/pages/Hero";
@@ -12,34 +11,28 @@ import CartPage from "./components/pages/CartPage";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+    <Router>
+      <Routes>
+        {/* Homepage with all sections */}
+        <Route
+          path="/"
+          element={
+            <>
+              <SubHeader />
+              <Header />
+              <Hero />
+              <Categories />
+              <ProductList />
+            </>
+          }
+        />
 
-          <Route
-            path="/ProductList"
-            element={
-              <>
-                <SubHeader />
-                <Header />
-                <Hero />
-                <Categories />
-                <ProductList />
-              </>
-            }
-          />
-
-          <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/edit-product/:id" element={<ProductEdit />} />
-          <Route path="/cart" element={<CartPage />} />
-
-          {/* Redirect any unknown routes to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+        {/* Product View page */}
+        <Route path="/edit-product/:id" element={<ProductEdit />} />
+        <Route path="/product/:id" element={<ProductView />} />
+       <Route path="/cart" element={<CartPage />} />
+      </Routes>
+    </Router>
   );
 }
 
