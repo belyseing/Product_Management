@@ -7,40 +7,34 @@ import { getProductById } from "../../api/productAPI";
 import { useCart } from "../../context/CartContext"; 
 
 function ProductView() {
-const { id } = useParams();
-const navigate = useNavigate();
-const { products } = useProducts();
-const productContext = useContext(ProductContext);
-const { addToCart, isInCart } = useCart();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { products } = useProducts();
+  const productContext = useContext(ProductContext);
+  const { addToCart, isInCart } = useCart();
 
-const [isAddingToCart, setIsAddingToCart] = useState(false);
-const [activeImageIndex, setActiveImageIndex] = useState(0);
-const [isDeleting, setIsDeleting] = useState(false);
-const [deleteError, setDeleteError] = useState("");
-const [product, setProduct] = useState<any>(null);
-const [loading, setLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-const productInCart = product ? isInCart(product.id) : false;
+  const productInCart = product ? isInCart(product.id) : false;
 
-
- 
-
-
-const handleAddToCart = () => {
-  if (!product) return;
-  setIsAddingToCart(true);
-  addToCart(product);
-  console.log("Add to cart:", product);
-  setIsAddingToCart(false);
-};
-
-
+  const handleAddToCart = () => {
+    if (!product) return;
+    setIsAddingToCart(true);
+    addToCart(product);
+    console.log("Add to cart:", product);
+    setIsAddingToCart(false);
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
 
-      
+      // First check if product exists in local state
       const localProduct = products.find((p) => p.id.toString() === id);
       if (localProduct) {
         setProduct(localProduct);
@@ -48,7 +42,6 @@ const handleAddToCart = () => {
         return;
       }
 
- 
       try {
         setLoading(true);
         const productData = await getProductById(Number(id));
@@ -102,7 +95,6 @@ const handleAddToCart = () => {
       if (productContext) {
         await productContext.deleteExistingProduct(product.id);
         alert("Product deleted successfully!");
-        navigate("/");
       } else {
         setDeleteError("Product context not available");
       }
@@ -113,8 +105,6 @@ const handleAddToCart = () => {
       setIsDeleting(false);
     }
   };
-
-
 
   const handleNextImage = () => {
     if (product.images && product.images.length > 0) {
@@ -145,7 +135,6 @@ const handleAddToCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50/50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-       
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-sm gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl shadow-md hover:from-amber-600 hover:to-amber-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 mb-6 group"
@@ -154,7 +143,6 @@ const handleAddToCart = () => {
           <span>Back to Products</span>
         </button>
 
-        
         {deleteError && (
           <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-xl border border-red-200">
             {deleteError}
@@ -163,10 +151,8 @@ const handleAddToCart = () => {
 
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           <div className="flex flex-col lg:flex-row">
-          
             <div className="lg:w-2/5 p-6 md:p-8">
               <div className="sticky top-6">
-               
                 <div className="relative bg-gradient-to-br from-slate-50 to-indigo-50 rounded-2xl p-6 shadow-inner flex items-center justify-center h-80 mb-6">
                   <img
                     src={allImages[activeImageIndex]}
@@ -174,14 +160,12 @@ const handleAddToCart = () => {
                     className="max-w-full max-h-64 object-contain rounded-xl transition-transform duration-500"
                   />
                   
-                  
                   {product.discountPercentage && (
                     <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg z-10">
                       {product.discountPercentage}% OFF
                     </div>
                   )}
 
-                 
                   {allImages.length > 1 && (
                     <>
                       <button
@@ -199,7 +183,6 @@ const handleAddToCart = () => {
                     </>
                   )}
 
-                 
                   {allImages.length > 1 && (
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
                       {activeImageIndex + 1} / {allImages.length}
@@ -207,7 +190,6 @@ const handleAddToCart = () => {
                   )}
                 </div>
 
-               
                 {allImages.length > 1 && (
                   <div className="mb-6">
                     <div className="flex gap-3 overflow-x-auto pb-2">
@@ -232,20 +214,19 @@ const handleAddToCart = () => {
                   </div>
                 )}
 
-               
                 <div className="flex flex-col gap-3">
-               <button
-  onClick={handleAddToCart}
-  disabled={productInCart || isAddingToCart}
-  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300 ${
-    productInCart || isAddingToCart
-      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-      : "bg-amber-500 text-white hover:bg-amber-600 hover:shadow-lg active:scale-95"
-  }`}
->
-  <FaShoppingCart className="text-xl" />
-  {productInCart ? "Added" : isAddingToCart ? "Adding..." : "Add to Cart"}
-</button>
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={productInCart || isAddingToCart}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300 ${
+                      productInCart || isAddingToCart
+                        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                        : "bg-amber-500 text-white hover:bg-amber-600 hover:shadow-lg active:scale-95"
+                    }`}
+                  >
+                    <FaShoppingCart className="text-xl" />
+                    {productInCart ? "Added" : isAddingToCart ? "Adding..." : "Add to Cart"}
+                  </button>
 
                   <div className="flex gap-3">
                     <button
@@ -268,7 +249,6 @@ const handleAddToCart = () => {
               </div>
             </div>
 
-            
             <div className="lg:w-3/5 p-6 md:p-8 border-t lg:border-t-0 lg:border-l border-gray-100">
               <div className="flex flex-col">
                 {/* Category */}

@@ -28,6 +28,7 @@ export const getCategories = async () => {
 };
 
 
+
 export const getProductsByCategory = async (category: string) => {
   try {
     const response = await axios.get(`${API_URL}/category/${category}`);

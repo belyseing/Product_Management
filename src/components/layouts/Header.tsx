@@ -1,10 +1,10 @@
 import { SiCoinmarketcap } from "react-icons/si";
-import { FaUserAlt } from "react-icons/fa";
+import { FaUserAlt, FaAngleDown } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
 import { useCart } from "../../context/CartContext";
 import { useNavigate, useLocation } from "react-router-dom"; 
 import { useState, useEffect, useRef } from "react";
-import { searchProducts, getCategories} from "../../api/productAPI";
+import { searchProducts, getCategories } from "../../api/productAPI";
 import { Product } from "../../types/product";
 
 interface Category {
@@ -17,36 +17,37 @@ function Header() {
   const { cart } = useCart(); 
   const navigate = useNavigate();
   const location = useLocation();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Extract category from URL on component mount and URL changes
+  // Extract category from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const category = searchParams.get('category');
-    if (category) {
-      setSelectedCategory(category);
-    }
+    if (category) setSelectedCategory(category);
   }, [location.search]);
 
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const cats = await getCategories();
-       
+
         if (cats.length > 0 && typeof cats[0] === 'object') {
           setCategories(cats as Category[]);
         } else {
-          
           setCategories((cats as string[]).map((cat, index) => ({
             id: index,
-            name: cat.charAt(0).toUpperCase() + cat.slice(1), 
-            slug: cat.toLowerCase()
+            name: cat.charAt(0).toUpperCase() + cat.slice(1),
+            slug: cat.toLowerCase().replace(/\s+/g, '-')
           })));
         }
       } catch (error) {
@@ -57,7 +58,7 @@ function Header() {
           { id: 3, name: "Fragrances", slug: "fragrances" },
           { id: 4, name: "Skincare", slug: "skincare" },
           { id: 5, name: "Groceries", slug: "groceries" },
-          { id: 6, name: "Home decoration", slug: "home-decoration" }
+          { id: 6, name: "Home Decoration", slug: "home-decoration" }
         ]);
       }
     };
@@ -65,10 +66,12 @@ function Header() {
     fetchCategories();
   }, []);
 
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
+        setShowCategoryDropdown(false);
       }
     };
 
@@ -76,11 +79,11 @@ function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Search debounce
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (searchTerm.trim().length > 1) {
-        performSearch();
-      } else {
+      if (searchTerm.trim().length > 1) performSearch();
+      else {
         setSearchResults([]);
         setShowSuggestions(false);
       }
@@ -105,15 +108,8 @@ function Header() {
 
   const handleSearchSubmit = () => {
     const searchParams = new URLSearchParams();
-    
-    if (searchTerm.trim()) {
-      searchParams.set('search', searchTerm);
-    }
-    
-    if (selectedCategory !== "all") {
-      searchParams.set('category', selectedCategory);
-    }
-    
+    if (searchTerm.trim()) searchParams.set('search', searchTerm);
+    if (selectedCategory !== "all") searchParams.set('category', selectedCategory);
     const queryString = searchParams.toString();
     navigate(queryString ? `/?${queryString}` : '/');
     setShowSuggestions(false);
@@ -121,15 +117,19 @@ function Header() {
 
   const handleCategoryChange = (categorySlug: string) => {
     setSelectedCategory(categorySlug);
-    setSearchTerm(""); 
-    
+    setSearchTerm("");
     const searchParams = new URLSearchParams();
-    if (categorySlug !== "all") {
-      searchParams.set('category', categorySlug);
-    }
-    
+    if (categorySlug !== "all") searchParams.set('category', categorySlug);
     const queryString = searchParams.toString();
     navigate(queryString ? `/?${queryString}` : '/');
+    setShowSuggestions(false);
+    setShowCategoryDropdown(false);
+  };
+
+  const handleCategorySelect = (categorySlug: string) => {
+    setSelectedCategory(categorySlug);
+    setShowCategoryDropdown(false);
+    navigate(categorySlug === "all" ? '/' : `/?category=${encodeURIComponent(categorySlug)}`);
   };
 
   const handleSuggestionClick = (product: Product) => {
@@ -139,24 +139,30 @@ function Header() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearchSubmit();
-    }
+    if (e.key === 'Enter') handleSearchSubmit();
+  };
+
+  const toggleCategoryDropdown = () => {
+    setShowCategoryDropdown(!showCategoryDropdown);
+    setShowSuggestions(false);
+  };
+
+  const getCategoryDisplayName = () => {
+    if (selectedCategory === "all") return "Categories";
+    const category = categories.find(cat => cat.slug === selectedCategory);
+    return category ? category.name : selectedCategory;
   };
 
   return (
     <div className="flex justify-between items-center bg-slate-700 text-white px-6 py-4">
-      
       <div className="flex items-center gap-2">
         <SiCoinmarketcap className="text-3xl text-slate-300" />
         <h1 className="text-2xl font-bold">Shop<span className="text-amber-500">cart</span></h1>
       </div>
 
-      
       <div className="flex flex-1 justify-center">
         <div className="relative w-full max-w-2xl" ref={searchRef}>
           <div className="flex items-center bg-white rounded-md overflow-hidden">
-           
             <select
               className="bg-gray-100 px-4 py-3 cursor-pointer border-r border-gray-300 text-black"
               value={selectedCategory}
@@ -169,8 +175,37 @@ function Header() {
                 </option>
               ))}
             </select>
-            
-          
+
+            <div className="relative">
+              <div 
+                className="flex items-center gap-1 bg-gray-100 px-4 py-3 cursor-pointer border-r"
+                onClick={toggleCategoryDropdown}
+              >
+                <p className="text-black">{getCategoryDisplayName()}</p>
+                <FaAngleDown className="text-black" />
+              </div>
+
+              {showCategoryDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto w-48">
+                  <div
+                    className={`p-3 hover:bg-gray-100 cursor-pointer border-b ${selectedCategory === "all" ? "bg-amber-100 font-semibold" : ""}`}
+                    onClick={() => handleCategorySelect("all")}
+                  >
+                    All Categories
+                  </div>
+                  {categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className={`p-3 hover:bg-gray-100 cursor-pointer border-b ${selectedCategory === category.slug ? "bg-amber-100 font-semibold" : ""}`}
+                      onClick={() => handleCategorySelect(category.slug)}
+                    >
+                      {category.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <input
               type="text"
               placeholder="Search for Product..."
@@ -180,8 +215,7 @@ function Header() {
               onKeyPress={handleKeyPress}
               onFocus={() => searchTerm.length > 1 && setShowSuggestions(true)}
             />
-            
-           
+
             <button 
               className="bg-amber-500 px-6 py-3 font-semibold text-black hover:bg-amber-400 transition"
               onClick={handleSearchSubmit}
@@ -190,7 +224,6 @@ function Header() {
             </button>
           </div>
 
-         
           {showSuggestions && (
             <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg mt-1 z-50 max-h-60 overflow-y-auto">
               {isSearching ? (
@@ -232,13 +265,9 @@ function Header() {
         </div>
       </div>
 
-     
       <div className="flex items-center gap-6 mr-4">
         <div className="flex items-center gap-2">
-          <FaUserAlt
-            className="bg-amber-400 rounded-full p-2"
-            size={32} 
-          />
+          <FaUserAlt className="bg-amber-400 rounded-full p-2" size={32} />
           <p className="text-lg font-medium">Emily</p>
         </div>
 
@@ -252,7 +281,7 @@ function Header() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Header;

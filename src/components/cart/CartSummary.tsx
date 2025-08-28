@@ -16,14 +16,11 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 }) => {
   return (
     <div className="bg-slate-50 rounded-3xl shadow-xl p-6 border border-slate-200">
-      
-   
       <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center">
         <FaShoppingCart className="mr-2 text-amber-500" />
         Order Summary
       </h2>
 
-     
       <div className="space-y-4 mb-6">
         <div className="flex justify-between">
           <span className="text-slate-600 font-medium">Items ({totalItems})</span>
@@ -45,7 +42,6 @@ const CartSummary: React.FC<CartSummaryProps> = ({
         </div>
       </div>
 
-    
       <button
         onClick={onCheckout}
         disabled={totalItems === 0 || isLoading}
