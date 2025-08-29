@@ -25,7 +25,7 @@ const ProductList: React.FC = () => {
   
   const location = useLocation();
 
-  // Get search query and category from URL
+ 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const query = searchParams.get('search');
@@ -35,7 +35,7 @@ const ProductList: React.FC = () => {
     setSelectedCategory(category || "all");
   }, [location.search]);
 
-  // Update current products when products change
+  
   useEffect(() => {
     setCurrentProducts(products);
   }, [products]);
@@ -70,7 +70,7 @@ const ProductList: React.FC = () => {
     fetchCategories();
   }, []);
 
-  // Handle search and category functionality
+ 
   useEffect(() => {
     const performFilter = async () => {
       if (searchQuery.trim() || selectedCategory) {
@@ -79,20 +79,19 @@ const ProductList: React.FC = () => {
           let results;
           
           if (searchQuery.trim()) {
-            // Search by query
+          
             results = await searchProducts(searchQuery);
           } else {
-            // Use current products instead of fetching again to include newly added products
+           
             results = currentProducts;
           }
           
-          // Filter by category if selected
+         
           if (selectedCategory && selectedCategory !== "all") {
             results = results.filter(product => {
               const productCategory = product.category.toLowerCase();
               const selectedCat = selectedCategory.toLowerCase();
               
-              // Try both direct match and slug match
               return productCategory === selectedCat || 
                      productCategory === selectedCat.replace(/-/g, ' ') ||
                      productCategory.replace(/\s+/g, '-') === selectedCat;
@@ -107,7 +106,7 @@ const ProductList: React.FC = () => {
           setIsSearching(false);
         }
       } else {
-        // No search query or category filter
+       
         let result = [...currentProducts];
         if (selectedCategory !== "all") {
           result = result.filter(product => {
@@ -122,7 +121,7 @@ const ProductList: React.FC = () => {
     performFilter();
   }, [searchQuery, selectedCategory, currentProducts]);
 
-  // Listen for product updates
+  
   useEffect(() => {
     const handleProductUpdated = (event: CustomEvent) => {
       const { productId, updatedProduct } = event.detail;
@@ -143,15 +142,14 @@ const ProductList: React.FC = () => {
     };
   }, [refreshProducts]);
 
-  // Listen for new product additions
+
   useEffect(() => {
     const handleProductAdded = (event: CustomEvent) => {
       const { product } = event.detail;
       
-      // Add the new product to the beginning of the list
-      setCurrentProducts(prevProducts => [product, ...prevProducts]);
       
-      // Also refresh the products from the hook to keep everything in sync
+      setCurrentProducts(prevProducts => [product, ...prevProducts]);
+     
       refreshProducts();
     };
 
@@ -192,7 +190,7 @@ const ProductList: React.FC = () => {
     }
   };
 
-  // For displayProducts - use filteredProducts
+  
   const displayProducts = filteredProducts;
 
   return (
@@ -201,7 +199,7 @@ const ProductList: React.FC = () => {
         <div className="text-center mb-12 mt-12 relative">
           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-80"></div>
           
-          {/* Dynamic title */}
+        
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
             {getPageTitle().split(' ').map((word, index) => {
               if (word.includes('"') || (selectedCategory && selectedCategory !== "all" && index === 0)) {
@@ -224,7 +222,7 @@ const ProductList: React.FC = () => {
           </div>
         </div>
 
-        {/* Loading state */}
+      
         {isSearching && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
@@ -232,7 +230,7 @@ const ProductList: React.FC = () => {
           </div>
         )}
 
-        {/* No results state */}
+       
         {!isSearching && (searchQuery || selectedCategory !== "all") && displayProducts.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
@@ -254,7 +252,6 @@ const ProductList: React.FC = () => {
           </div>
         )}
 
-        {/* Products grid */}
         {!isSearching && displayProducts.length > 0 && (
           <div className="flex justify-center">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 md:gap-10">

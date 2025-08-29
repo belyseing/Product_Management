@@ -4,7 +4,7 @@ import { addProduct } from "../api/productAPI";
 
 interface ProductFormProps {
   onClose: () => void;
-  onProductAdded?: (product: Product) => void; // Callback when product is successfully added
+  onProductAdded?: (product: Product) => void; 
 }
 
 function ProductForm({ onClose, onProductAdded }: ProductFormProps) {
@@ -22,40 +22,39 @@ function ProductForm({ onClose, onProductAdded }: ProductFormProps) {
     setError("");
 
     try {
-      // Prepare product data for API
+   
       const productData = {
         title,
         price: Number(price),
         description,
         category,
-        images: [image || "https://via.placeholder.com/300"], // Default image if none provided
+        images: [image || "https://via.placeholder.com/300"], 
       };
 
-      // Call API to add product
+    
       const newProduct = await addProduct(productData);
       
-      // Dispatch custom event to notify ProductList of new product
+     
       const event = new CustomEvent('productAdded', {
         detail: { product: newProduct }
       });
       window.dispatchEvent(event);
 
-      // Call callback if provided
+    
       if (onProductAdded) {
         onProductAdded(newProduct);
       }
 
-      // Reset form
+      
       setTitle("");
       setPrice("");
       setDescription("");
       setCategory("");
       setImage("");
-      
-      // Close form
+  
       onClose();
       
-      // Show success message
+      
       alert("Product added successfully!");
       
     } catch (err) {
